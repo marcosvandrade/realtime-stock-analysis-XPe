@@ -4,21 +4,24 @@ from datetime import datetime, timedelta
 import plotly.graph_objs as go
 from streamlit_autorefresh import st_autorefresh
 
-# List of stocks and intervals
-stocks = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
-intervals = ["1d", "1wk", "1mo"]
+# List of countries and intervals
+countries = ["Brazil", "United States"]
+intervals = ["1d", "1wk", "1mo"]  # Adjusting intervals for yfinance
 
 start_date = datetime.now() - timedelta(days=30)
 end_date = datetime.now()
 
+# Caching functions to avoid redundant data fetching
+@st.cache_data()
+def consultar_acao(stock, from_date, to_date, interval):
+    return yf.download(stock, start=from_date, end=to_date, interval=interval, progress=False)
 
-# Function to get stock data
-def consultar_acao(stock, start_date, end_date, interval):
-    return yf.download(stock, start=start_date, end=end_date, interval=interval)
+# Formatting date
+def format_date(dt, format="%Y-%m-%d"):
+    return dt.strftime(format)
 
-
-# Function to plot candlestick chart
-def plotCandleStick(df, stock="stock"):
+# Plotting candlestick chart
+def plotCandleStick(df, acao="ticket"):
     trace1 = {
         "x": df.index,
         "open": df["Open"],
@@ -26,7 +29,7 @@ def plotCandleStick(df, stock="stock"):
         "high": df["High"],
         "low": df["Low"],
         "type": "candlestick",
-        "name": stock,
+        "name": acao,
         "showlegend": False,
     }
 
@@ -35,9 +38,10 @@ def plotCandleStick(df, stock="stock"):
 
     return go.Figure(data=data, layout=layout)
 
-
 # Creating the sidebar
-st.sidebar.header("Stock Monitor")
+barra_lateral = st.sidebar.empty()
+country_select = st.sidebar.selectbox("Select country:", countries)
+stocks = ["AAPL", "MSFT", "GOOGL"]  # Example stocks, replace with your stock list
 stock_select = st.sidebar.selectbox("Select the stock:", stocks)
 from_date = st.sidebar.date_input("Start Date:", start_date)
 to_date = st.sidebar.date_input("End Date:", end_date)
@@ -67,15 +71,15 @@ else:
     st.write(f"Count: {count}")
 
 if from_date > to_date:
-    st.sidebar.error("Start date cannot be after end date")
+    st.sidebar.error("Start Date greater than End Date")
 else:
-    df = consultar_acao(stock_select, from_date, to_date, interval_select)
+    df = consultar_acao(stock_select, format_date(from_date), format_date(to_date), interval_select)
     try:
         fig = plotCandleStick(df)
-        grafico_candle = st.plotly_chart(fig)
-        grafico_line = st.line_chart(df["Close"])
+        grafico_candle.plotly_chart(fig)
+        grafico_line.line_chart(df["Close"])
         if carregar_dados:
             st.subheader("Data")
-            dados = st.dataframe(df)
+            st.dataframe(df)
     except Exception as e:
         st.error(e)
