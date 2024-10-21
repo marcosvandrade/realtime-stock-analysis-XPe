@@ -1,7 +1,3 @@
-Sure! Here's a suggestion for your README.md file that includes emojis and is structured for clarity and engagement:
-
----
-
 # 📊 Análise Gráfica de Ações em Tempo Real
 
 🚀 **Projeto**: Ferramenta para Análise Gráfica das Principais Ações do Mercado Brasileiro e Americano em Tempo Real
